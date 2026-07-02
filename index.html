@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enlace a Radio Consecuente</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#07142e">
+
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+    body{background:#07142e;padding:10px;padding-bottom:90px;}
+    .contenedor{max-width:450px;margin:auto;background:linear-gradient(180deg,#07142e,#0f2a55,#07142e);border-radius:24px;box-shadow:0 15px 35px rgba(0,0,0,0.5);padding:25px;text-align:center;border:1px solid rgba(255,255,255,0.05)}
+    
+    .logo-radio{width:100%;max-width:220px;height:auto;border-radius:50%;border:3px solid #00d2ff;
+    animation: flotar 4s ease-in-out infinite, brillo 2s ease-in-out infinite;}
+    @keyframes flotar {0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+    @keyframes brillo {0%,100%{box-shadow:0 0 10px #00d2ff}50%{box-shadow:0 0 25px #7b2ffd}}
+
+    h1{color:#fff;font-size:22px;margin:20px 0;text-transform:uppercase;background:linear-gradient(90deg,#00d2ff,#7b2ffd);-webkit-background-clip:text;color:transparent;}
+    
+    .reproductor-caja{background:rgba(255,255,255,0.03);border-radius:16px;padding:30px 20px;border:1px solid rgba(0,210,255,0.2);display:flex;flex-direction:column;align-items:center;}
+    .boton-play{width:70px;height:70px;border-radius:50%;border:none;background:linear-gradient(135deg,#0088ff,#7b2ffd);color:#fff;font-size:28px;cursor:pointer;box-shadow:0 0 20px rgba(0,210,255,0.5);transition:0.3s}
+    
+    #statusMsg{color:#00d2ff;font-size:12px;margin-top:15px;height:20px;font-weight:bold;opacity:0;transition:0.5s;}
+    
+    .boton-instalar-nuevo{display:none;position:fixed;bottom:15px;left:50%;transform:translateX(-50%);background:#ffcc00;color:#000;border:none;padding:15px 35px;font-weight:bold;border-radius:50px;cursor:pointer;z-index:9999;box-shadow:0 8px 20px rgba(255,204,0,0.4);}
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+    <img class="logo-radio" src="https://i.imgur.com/Bp36iz0.jpeg" alt="Logo">
+    <h1>ENLACE A RADIO CONSECUENTE</h1>
+
+    <div class="reproductor-caja">
+        <button class="boton-play" id="btnPlay">▶</button>
+        <div id="statusMsg"></div>
+        <audio id="reproductor" preload="none"></audio>
+    </div>
+</div>
+
+<button id="botonInstalar" class="boton-instalar-nuevo">📲 INSTALAR APP</button>
+
+<script>
+    const audio = document.getElementById('reproductor');
+    const btnPlay = document.getElementById('btnPlay');
+    const statusMsg = document.getElementById('statusMsg');
+    const enlaces = ["https://stream.espora.org/enlaceconsecuente1", "https://radios.yanapak.org/enlaceconsecuente"];
+    let activo = 0;
+
+    function mostrarEstado(msg) {
+        statusMsg.textContent = msg;
+        statusMsg.style.opacity = "1";
+    }
+
+    function intentarReproducir() {
+        mostrarEstado("🔍 Chequeando enlace...");
+        audio.src = enlaces[activo];
+        audio.play().then(() => {
+            statusMsg.style.opacity = "0";
+            btnPlay.textContent = "⏸";
+        }).catch(() => {
+            activo = activo === 0 ? 1 : 0;
+            mostrarEstado("🔄 Reintentando conexión...");
+            setTimeout(intentarReproducir, 2000);
+        });
+    }
+
+    btnPlay.addEventListener('click', () => {
+        if (audio.paused) {
+            intentarReproducir();
+        } else {
+            audio.pause();
+            btnPlay.textContent = "▶";
+            statusMsg.style.opacity = "0";
+        }
+    });
+
+    audio.addEventListener('error', () => {
+        activo = activo === 0 ? 1 : 0;
+        intentarReproducir();
+    });
+
+    let eventoInstalar;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        eventoInstalar = e;
+        document.getElementById('botonInstalar').style.display = 'block';
+    });
+    document.getElementById('botonInstalar').addEventListener('click', () => {
+        if(eventoInstalar) eventoInstalar.prompt();
+    });
+</script>
+</body>
+</html>

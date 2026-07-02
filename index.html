@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0E27">
+<title>Enlace a La Consecuente</title>
+
+<!-- ✅ Manifest y Worker: igual que la que sí funciona -->
+<link rel="manifest" href="manifest-enlace.json">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker-enlace.js');
+  });
+}
+</script>
+
+<style>
+* {margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif;}
+body {
+  background: linear-gradient(180deg, #05071A, #0F173A, #192459);
+  min-height: 100vh;
+  padding: 16px;
+  color: #fff;
+}
+.contenedor {max-width: 460px; margin: 0 auto; text-align: center;}
+
+/* 🤖 LOGO: MISMO MOVIMIENTO QUE PEDISTE */
+.logo-radio {
+  width: 145px; height: 145px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 220, 255, 0.5);
+  box-shadow: 0 0 25px rgba(0,220,255,0.4);
+  margin: 0 auto 22px;
+  object-fit: cover;
+  animation: subeBaja 6s ease-in-out infinite alternate, brillo 3s ease-in-out infinite alternate;
+}
+@keyframes subeBaja {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-5px) scale(1.02); }
+}
+@keyframes brillo {
+  from { box-shadow: 0 0 20px #00E0FF70; }
+  to { box-shadow: 0 0 35px #00FFFF, 0 0 60px #7B2FFD60; }
+}
+
+h1 {
+  font-size: 26px; margin-bottom: 8px;
+  background: linear-gradient(90deg, #00E0FF, #7B2FFD);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.descripcion {
+  font-size: 16px; color: #B4D6FF; margin-bottom: 24px;
+}
+
+.estado {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(0,220,255,0.25);
+  border-radius: 20px;
+  padding: 22px 18px;
+  margin-bottom: 26px;
+  min-height: 70px;
+  font-size: 18px;
+}
+
+/* 📶 Barras de conexión */
+.barras-sonido {
+  display: flex; justify-content: center; align-items: flex-end;
+  gap: 7px; height: 38px; margin-bottom: 26px; opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.barras-activas { opacity: 1; }
+.barra {
+  width: 7px; border-radius: 4px;
+  background: linear-gradient(#00E0FF, #7B2FFD);
+  box-shadow: 0 0 8px #00E0FF;
+  animation: pulso 1.2s ease-in-out infinite alternate;
+}
+.barra:nth-child(2) {animation-delay: 0.2s;}
+.barra:nth-child(3) {animation-delay: 0.4s;}
+.barra:nth-child(4) {animation-delay: 0.6s;}
+.barra:nth-child(5) {animation-delay: 0.8s;}
+@keyframes pulso {
+  from {height: 8px;}
+  to {height: 30px;}
+}
+
+/* Botón principal */
+.btn-play {
+  width: 68px; height: 68px; border-radius: 50%; border: none;
+  background: linear-gradient(135deg, #0088FF, #7B2FFD);
+  box-shadow: 0 0 22px rgba(0,220,255,0.6);
+  font-size: 26px; color: white; cursor: pointer;
+  margin-bottom: 28px;
+}
+.btn-play:active { transform: scale(0.95); }
+
+/* ✅ BOTÓN INSTALAR: MISMA ESTRUCTURA QUE LA OTRA */
+#botonInstalar {
+  padding: 12px 26px; border-radius: 30px; border: none;
+  background: linear-gradient(90deg, #FFB700, #FFDD00);
+  color: #000; font-weight: bold; font-size: 15px;
+  box-shadow: 0 0 15px rgba(255,215,0,0.5);
+  cursor: pointer; display: none;
+}
+
+.cartel-info {
+  margin-top: 24px; font-size: 13px; color: #9CE7FF;
+  min-height: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+  <img class="logo-radio" src="https://i.imgur.com/Bp36iz0.jpeg" alt="Enlace Técnico">
+  
+  <h1>ENLACE A LA CONSECUENTE</h1>
+  <div class="descripcion">Transmisión estable · Solo uso técnico</div>
+
+  <div class="estado" id="infoEstado">Listo para conectar</div>
+
+  <div class="barras-sonido" id="barrasSonido">
+    <div class="barra"></div><div class="barra"></div><div class="barra"></div><div class="barra"></div><div class="barra"></div>
+  </div>
+
+  <button class="btn-play" id="btnPlay">▶</button>
+
+  <br>
+  <button id="botonInstalar">📲 Instalar Enlace</button>
+
+  <div class="cartel-info" id="cartelChequeo"></div>
+</div>
+
+<audio id="reproductor" preload="none">
+
+<script>
+// 📡 TUS ENLACES EXACTOS
+const señales = [
+  "https://stream.espora.org/enlaceconsecuente1",
+  "https://radios.yanapak.org/enlaceconsecuente"
+];
+let señalActiva = 0;
+let volumen = 0.95;
+
+const audio = document.getElementById('reproductor');
+const btnPlay = document.getElementById('btnPlay');
+const infoEstado = document.getElementById('infoEstado');
+const barrasSonido = document.getElementById('barrasSonido');
+const cartelChequeo = document.getElementById('cartelChequeo');
+let deferredPrompt;
+
+// ✅ DETECCIÓN DE INSTALACIÓN IGUAL QUE LA QUE FUNCIONA
+window.addEventListener("beforeinstallprompt", function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("botonInstalar").style.display = "inline-block";
+});
+
+document.getElementById("botonInstalar").addEventListener("click", async function() {
+  if (!deferredPrompt) {
+    return alert("ℹ️ Desde el menú: ⋮ → Agregar a pantalla de inicio");
+  }
+  const resultado = await deferredPrompt.prompt();
+  if (resultado.outcome === "accepted") {
+    deferredPrompt = null;
+    this.style.display = "none";
+  }
+});
+
+function cargarSenal() {
+  audio.src = señales[señalActiva];
+  audio.load();
+  infoEstado.textContent = señalActiva === 0 ? "🔄 Conectando señal principal..." : "⚠️ Usando respaldo";
+}
+
+audio.addEventListener("error", () => {
+  if (señalActiva === 0) {
+    señalActiva = 1;
+    setTimeout(cargarSenal, 1500);
+  }
+});
+
+audio.addEventListener("playing", () => {
+  infoEstado.textContent = "✅ ENLACE ESTABLE - Transmitiendo";
+  btnPlay.textContent = "⏸";
+  barrasSonido.classList.add("barras-activas");
+});
+
+audio.addEventListener("pause", () => {
+  btnPlay.textContent = "▶";
+  barrasSonido.classList.remove("barras-activas");
+});
+
+// Volver automático a principal cada 3 min
+setInterval(() => {
+  if (señalActiva !== 0 && !audio.paused) {
+    infoEstado.textContent = "🔍 Probando señal principal...";
+    const temp = señalActiva;
+    señalActiva = 0;
+    cargarSenal();
+    audio.play().catch(() => { señalActiva = temp; cargarSenal(); });
+  }
+}, 180000);
+
+// Cartel de chequeo
+setInterval(() => {
+  if (!audio.paused) {
+    cartelChequeo.textContent = "✅ Chequeo de conexión activo";
+    setTimeout(() => cartelChequeo.textContent = "", 3500);
+  }
+}, 120000);
+
+btnPlay.addEventListener("click", () => {
+  if (audio.paused) { cargarSenal(); audio.play().catch(() => infoEstado.textContent = "Tocá nuevamente para iniciar"); }
+  else audio.pause();
+});
+
+audio.volume = volumen;
+</script>
+
+</body>
+</html>

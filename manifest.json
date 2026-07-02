@@ -1,9 +1,0 @@
-﻿{
-  "name": "Enlace a Radio Consecuente",
-  "short_name": "Consecuente",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#07142e",
-  "theme_color": "#07142e",
-  "icons": [{ "src": "https://i.imgur.com/Bp36iz0.jpeg", "sizes": "512x512", "type": "image/jpeg" }]
-}

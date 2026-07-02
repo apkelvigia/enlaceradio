@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enlace a Radio Consecuente</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { background: #07142e; color: #fff; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .contenedor { width: 90%; max-width: 400px; background: #0a1c3d; padding: 30px; border-radius: 20px; border: 1px solid #00d2ff; text-align: center; box-shadow: 0 0 40px rgba(0,210,255,0.2); }
+        .logo { width: 150px; height: 150px; border-radius: 50%; border: 3px solid #00d2ff; margin-bottom: 20px; animation: flotar 3s infinite ease-in-out; }
+        @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .estado { color: #00d2ff; font-size: 14px; margin-bottom: 20px; height: 20px; }
+        .btn-play { background: #00d2ff; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; color: #07142e; }
+        .instalar { background: #ffcc00; border: none; padding: 10px 20px; border-radius: 10px; margin-top: 20px; cursor: pointer; display: none; }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <img src="https://i.imgur.com/Bp36iz0.jpeg" class="logo" alt="Logo">
+        <div class="estado" id="status">INICIALIZANDO SISTEMA...</div>
+        <button class="btn-play" id="btnPlay">CONECTAR ENLACE</button>
+        <button class="instalar" id="btnInstalar">INSTALAR SISTEMA</button>
+        <audio id="audio" preload="none"></audio>
+    </div>
+
+    <script>
+        const audio = document.getElementById('audio');
+        const status = document.getElementById('status');
+        const btnPlay = document.getElementById('btnPlay');
+        const enlaces = ["https://stream.espora.org/enlaceconsecuente1", "https://radios.yanapak.org/enlaceconsecuente"];
+        let activo = 0;
+        const mensajes = ["CHEQUEANDO SEÑAL...", "VERIFICANDO SERVIDOR...", "ESTABLECIENDO ENLACE...", "CANAL 107.5 ESTABLE"];
+
+        function rotarMensajes() {
+            let i = 0;
+            setInterval(() => { status.textContent = mensajes[i]; i = (i + 1) % mensajes.length; }, 3000);
+        }
+
+        btnPlay.addEventListener('click', () => {
+            audio.src = enlaces[activo];
+            audio.play();
+            rotarMensajes();
+            btnPlay.style.display = 'none';
+        });
+
+        audio.addEventListener('error', () => {
+            status.textContent = "FALLO DETECTADO. REDIRECCIONANDO...";
+            activo = activo === 0 ? 1 : 0;
+            audio.src = enlaces[activo];
+            audio.play();
+        });
+
+        // Instalación
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstalar').style.display = 'block'; });
+        document.getElementById('btnInstalar').addEventListener('click', () => { deferredPrompt.prompt(); });
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+    </script>
+</body>
+</html>

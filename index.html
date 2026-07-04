@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enlace Consecuente</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" sizes="512x512" href="https://i.imgur.com/Bp36iz0.jpeg">
+    <meta name="theme-color" content="#07142e">
+
+    <style>
+        body { background: #07142e; color: #fff; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; margin: 0; }
+        .logo { width: 160px; border-radius: 50%; border: 3px solid #00d2ff; margin-bottom: 25px; box-shadow: 0 0 25px rgba(0,210,255,0.4); }
+        .pulso { animation: parpadeo 1.5s infinite; }
+        @keyframes parpadeo {
+            0% { box-shadow: 0 0 15px rgba(0, 210, 255, 0.4); }
+            50% { box-shadow: 0 0 35px rgba(0, 210, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(0, 210, 255, 0.4); }
+        }
+        #estado { color: #a0d8ff; margin-bottom: 20px; }
+        #btnPlay { background: #00d2ff; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; }
+        #botonInstalar { background: #ff9500; padding: 10px 20px; border-radius: 8px; margin-top: 15px; display: none; border: none; }
+        .footer { margin-top: 30px; font-size: 11px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <img src="https://i.imgur.com/Bp36iz0.jpeg" class="logo" id="imgLogo" alt="Logo">
+    <h1>ENLACE CONSECUENTE</h1>
+    <div id="estado">Presione Play</div>
+
+    <button id="btnPlay">▶ PLAY</button>
+    <button id="botonInstalar">📲 INSTALAR APP</button>
+
+    <div class="footer">
+        Todos los derechos reservados. El Vigía.<br>
+        Creado por El Vigía. Si querés tu propia aplicación, comunicate al: +54 9 3462 598048 - Argentina
+    </div>
+
+    <audio id="reproductor" preload="none"></audio>
+
+    <script>
+        const streams = ["https://stream.espora.org/enlaceconsecuente1", "https://radios.yanapak.org/enlaceconsecuente"];
+        let activo = 0;
+        const audio = document.getElementById("reproductor");
+        const btnPlay = document.getElementById("btnPlay");
+        const estado = document.getElementById("estado");
+        const logo = document.getElementById("imgLogo");
+        const btnInst = document.getElementById("botonInstalar");
+        let defPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            defPrompt = e;
+            btnInst.style.display = "inline-block";
+        });
+
+        btnInst.addEventListener('click', () => {
+            if (defPrompt) defPrompt.prompt();
+        });
+
+        function iniciar() {
+            estado.innerText = "📡 Conectando...";
+            audio.src = streams[activo];
+            audio.play().then(() => {
+                estado.innerText = "📡 Transmitiendo en vivo";
+                btnPlay.innerText = "⏸ PAUSA";
+                logo.classList.add("pulso");
+            }).catch(() => {
+                activo = activo === 0 ? 1 : 0;
+                iniciar();
+            });
+        }
+
+        btnPlay.addEventListener("click", () => {
+            if (audio.paused) {
+                iniciar();
+            } else {
+                audio.pause();
+                audio.src = "";
+                btnPlay.innerText = "▶ PLAY";
+                estado.innerText = "Transmisión detenida";
+                logo.classList.remove("pulso");
+            }
+        });
+    </script>
+</body>
+</html>

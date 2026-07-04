@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Enlace Consecuente</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" sizes="512x512" href="https://i.imgur.com/Bp36iz0.jpeg">
+<meta name="theme-color" content="#07142e">
+
+<style>
+    * {margin: 0; padding: 0; box-sizing: border-box;}
+    body { background: #07142e; color: #fff; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 25px; text-align: center; overflow: hidden;}
+
+    .logo { width: 160px; border-radius: 50%; border: 3px solid #00d2ff; margin-bottom: 25px; box-shadow: 0 0 25px rgba(0,210,255,0.4); }
+    .pulso { animation: parpadeo 1.5s infinite; }
+    @keyframes parpadeo {
+        0% { box-shadow: 0 0 15px rgba(0, 210, 255, 0.4); border-color: #00d2ff; }
+        50% { box-shadow: 0 0 35px rgba(0, 210, 255, 0.9), 0 0 10px rgba(255, 255, 255, 0.5); border-color: #ffffff; }
+        100% { box-shadow: 0 0 15px rgba(0, 210, 255, 0.4); border-color: #00d2ff; }
+    }
+
+    h1 { font-size: 28px; text-transform: uppercase; background: linear-gradient(90deg, #00d2ff, #7b2ffd); -webkit-background-clip: text; color: transparent; margin-bottom: 10px; }
+    #estado { color: #a0d8ff; font-size: 14px; margin-bottom: 5px; min-height: 20px; }
+
+    .contenedor-marquee { width: 100%; max-width: 400px; overflow: hidden; margin-bottom: 20px; height: 25px; border: 1px solid rgba(0, 210, 255, 0.2); background: rgba(0, 0, 0, 0.2); }
+    .marquee-texto { display: inline-block; padding-left: 100%; animation: desplazamiento 20s linear infinite; color: #00d2ff; font-size: 13px; line-height: 25px; text-transform: uppercase; }
+    @keyframes desplazamiento { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+    
+    #btnPlay { background: #00d2ff; color: #000; border: none; padding: 18px 40px; border-radius: 12px; font-weight: bold; font-size: 22px; cursor: pointer; box-shadow: 0 0 15px rgba(0,210,255,0.4); }
+    #botonInstalar { background: linear-gradient(90deg, #ff9500, #ffcc00); color: #000; border: none; padding: 12px 28px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; display: none; }
+    
+    .footer { margin-top: 30px; font-size: 11px; color: #4a5568; line-height: 1.4; max-width: 400px;}
+</style>
+</head>
+<body>
+
+    <img src="https://i.imgur.com/Bp36iz0.jpeg" class="logo" id="imgLogo" alt="Logo">
+    <h1>ENLACE CONSECUENTE</h1>
+    <div id="estado">Presione Play para iniciar</div>
+
+    <div class="contenedor-marquee">
+        <div class="marquee-texto">
+            📡 Enlace Consecuente • Transmitiendo en vivo • Señal estable • Siempre en línea • 
+        </div>
+    </div>
+
+    <button id="btnPlay">▶ PLAY</button>
+    <button id="botonInstalar">📲 INSTALAR APP</button>
+
+    <div class="footer">
+        Todos los derechos reservados. El Vigía.<br>
+        Creado por El Vigía. Si querés tu propia aplicación, comunicate al: +54 9 3462 598048 - Argentina
+    </div>
+
+    <audio id="reproductor" preload="none" crossorigin="anonymous"></audio>
+
+    <script>
+        const streams = ["https://stream.espora.org/enlaceconsecuente1", "https://radios.yanapak.org/enlaceconsecuente"];
+        let activo = 0;
+        const audio = document.getElementById("reproductor");
+        const btnPlay = document.getElementById("btnPlay");
+        const estado = document.getElementById("estado");
+        const imgLogo = document.getElementById("imgLogo");
+        const btnInstalar = document.getElementById("botonInstalar");
+
+        // Lógica Instalación PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; btnInstalar.style.display = "block"; });
+        btnInstalar.addEventListener('click', () => { if(deferredPrompt) { deferredPrompt.prompt(); } });
+
+        function actualizarEstado(msg, color = "#a0d8ff") { estado.textContent = "📡 " + msg; estado.style.color = color; }
+
+        function iniciarReproduccion() {
+            actualizarEstado("Conectando al servidor " + (activo + 1) + "...", "#00d2ff");
+            audio.src = streams[activo];
+            audio.play().then(() => {
+                actualizarEstado("Transmitiendo en vivo", "#34d399");
+                btnPlay.textContent = "⏸ PAUSA";
+                imgLogo.classList.add("pulso");
+            }).catch(() => {
+                actualizarEstado("Reconectando...", "#f59e0b");
+                cambiarSeñal();
+            });
+        }
+
+        function cambiarSeñal() {
+            setTimeout(() => {
+                activo = activo === 0 ? 1 : 0;
+                iniciarReproduccion();
+            }, 2000);
+        }
+
+        audio.addEventListener("error", () => { if(!audio.paused) cambiarSeñal(); });
+        btnPlay.addEventListener("click", () => {
+            if (audio.paused) { iniciarReproduccion(); } 
+            else { audio.pause(); audio.src = ""; btnPlay.textContent = "▶ PLAY"; actualizarEstado("Transmisión detenida"); imgLogo.classList.remove("pulso"); }
+        });
+    </script>
+</body>
+</html>

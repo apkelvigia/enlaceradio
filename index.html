@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio Consecuente</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="https://i.imgur.com/Bp36iz0.jpeg">
+<meta name="theme-color" content="#07142e">
+<style>
+body {background:#07142e; color:#fff; font-family:Arial; text-align:center; padding:30px;}
+.logo {width:160px; border-radius:50%; border:3px solid #00d2ff; margin:20px auto;}
+button {padding:16px 35px; font-size:20px; border:none; border-radius:10px; background:#00d2ff; color:#000; font-weight:bold; cursor:pointer;}
+#botonInstalar {background:#ffcc00; margin-top:15px; display:none;}
+</style>
+</head>
+<body>
+
+<img src="https://i.imgur.com/Bp36iz0.jpeg" class="logo">
+<h1>Radio Consecuente</h1>
+
+<button id="btnPlay">▶ PLAY</button>
+<button id="botonInstalar">📲 INSTALAR</button>
+
+<!-- Etiqueta audio CORRECTA y cerrada -->
+<audio id="audio" preload="none" crossorigin="anonymous">
+  <source src="https://stream.espora.org/enlaceconsecuente1" type="audio/mpeg">
+  <source src="https://radios.yanapak.org/enlaceconsecuente" type="audio/mpeg">
+
+
+<script>
+const audio = document.getElementById("audio");
+const btnPlay = document.getElementById("btnPlay");
+let reproduciendo = false;
+
+// Solo botón simple sin bucles infinitos
+btnPlay.addEventListener("click", () => {
+  if(!reproduciendo){
+    audio.load();
+    audio.play().then(() => {
+      reproduciendo = true;
+      btnPlay.textContent = "⏸ PAUSA";
+    }).catch(err => console.log("Error:", err));
+  } else {
+    audio.pause();
+    reproduciendo = false;
+    btnPlay.textContent = "▶ PLAY";
+  }
+});
+
+// Reconexión básica segura
+audio.addEventListener("error", () => {
+  if(reproduciendo) setTimeout(() => { audio.load(); audio.play(); }, 1500);
+});
+
+// Instalación
+let instalarPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault(); instalarPrompt = e;
+  botonInstalar.style.display = "block";
+});
+botonInstalar.addEventListener("click", () => instalarPrompt?.prompt());
+</script>
+
+</body>
+</html>
